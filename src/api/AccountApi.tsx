@@ -1,13 +1,13 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 import type IExtendCookieExpireTime from "./IExtendCookieExpireTime";
+import Cookies from "js-cookie";
 
-class ItemsApi implements IExtendCookieExpireTime {
+class AccountApi implements IExtendCookieExpireTime {
     private axiosInstance: any;
     constructor() {
         const baseUrl = import.meta.env.VITE_API_URL;
         this.axiosInstance = axios.create({
-            baseURL: `${baseUrl}/api/items`,
+            baseURL: `${baseUrl}/api/account`,
             headers: {
                 "Content-Type": "application/json",
             },
@@ -22,27 +22,28 @@ class ItemsApi implements IExtendCookieExpireTime {
         }
     }
 
-    // 獲取商品清單
-    async getItems() {
+    // 登入
+    async Signin(payload: {}) {
         try {
-            const res = await this.axiosInstance.get(`index`);
+            const res = await this.axiosInstance.post(`signIn`, payload);
             return res.data.data;
         } catch (error) {
-            console.error("取得商品清單錯誤", error);
+            console.error("登入錯誤", error);
             throw error;
         }
     }
 
-    // 獲取商品詳細資料
-    async getItemDetail(id: string) {
+    // 註冊
+    async SignUp(payload: {}) {
         try {
-            const res = await this.axiosInstance.get(`show?id=${id}`);
-            return res.data.data;
+            const res = await this.axiosInstance.post(`signUp`, payload);
+            return res.data;
         } catch (error) {
-            console.error("取得商品詳細資料錯誤", error);
+            console.error("註冊錯誤", error);
             throw error;
         }
     }
+
 }
 
-export default new ItemsApi();
+export default new AccountApi();
