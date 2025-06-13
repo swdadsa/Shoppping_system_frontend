@@ -1,22 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import signinImage from "@/assets/signin.jpg";
-import AccountApi from "@/api/AccountApi";
+import accountApi from "@/api/AccountApi";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner"; // shadcn Sonner 的 toast
+import { toast } from "sonner";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const SignInPage = () => {
     const navigate = useNavigate();
     const [loginType, setLoginType] = useState<"username" | "email">("username");
+    const location = useLocation();
 
     const [formData, setFormData] = useState({
         username: "",
         email: "",
         password: "",
     });
+
+    useEffect(() => {
+        if (location.state?.from === "SignOut") {
+            toast.success("登出成功，歡迎再度光臨！");
+        }
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -31,6 +38,7 @@ const SignInPage = () => {
                 : { email: formData.email, password: formData.password };
 
         try {
+            const AccountApi = new accountApi(Cookies.get("token"));
             const res = await AccountApi.Signin(payload);
 
             if (res.status === "success") {
@@ -42,13 +50,10 @@ const SignInPage = () => {
                 Cookies.set("permissions", userData.permissions.toString());
                 Cookies.set("id", userData.id.toString());
 
-                navigate("/");
-                toast.success("登入成功！歡迎回來！");
+                navigate("/", { state: { from: "login" } });
             } else {
-                toast.error("登入失敗，帳號或密碼錯誤！");
             }
         } catch (err) {
-            toast.error("伺服器錯誤，請稍後再試！");
             console.error("API 錯誤：", err);
         }
     };

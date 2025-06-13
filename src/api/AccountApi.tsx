@@ -4,12 +4,15 @@ import Cookies from "js-cookie";
 
 class AccountApi implements IExtendCookieExpireTime {
     private axiosInstance: any;
-    constructor() {
+    private token: string | undefined;
+    constructor(insertToken?: string) {
         const baseUrl = import.meta.env.VITE_API_URL;
+        this.token = insertToken
         this.axiosInstance = axios.create({
             baseURL: `${baseUrl}/api/account`,
             headers: {
                 "Content-Type": "application/json",
+                token: this.token || "",
             },
         });
     }
@@ -26,7 +29,7 @@ class AccountApi implements IExtendCookieExpireTime {
     async Signin(payload: {}) {
         try {
             const res = await this.axiosInstance.post(`signIn`, payload);
-            return res.data.data;
+            return res.data;
         } catch (error) {
             console.error("登入錯誤", error);
             throw error;
@@ -44,6 +47,28 @@ class AccountApi implements IExtendCookieExpireTime {
         }
     }
 
+    // 登出
+    async SignOut() {
+        try {
+            const res = await this.axiosInstance.post(`signOut`);
+            return res.data;
+        } catch (error) {
+            console.error("登出錯誤", error);
+            throw error;
+        }
+    }
+
+    // 個人資料
+    async profiles(id: number) {
+        try {
+            const res = await this.axiosInstance.get(`profiles?id=${id}`);
+            return res.data;
+        } catch (error) {
+            console.error("個人資料錯誤", error);
+            throw error;
+        }
+    }
+
 }
 
-export default new AccountApi();
+export default AccountApi;

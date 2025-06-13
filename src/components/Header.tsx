@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { ShoppingCart } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import accountApi from "@/api/AccountApi";
+import { toast } from "sonner";
+
 
 type HeaderProps = {
     cartCount: number;
@@ -29,12 +38,24 @@ export function Header({ cartCount, onCartCountRefresh }: HeaderProps) {
     }, [location]);
 
     const handleLogout = () => {
-        Cookies.remove("token");
-        Cookies.remove("username");
-        Cookies.remove("id");
-        setIsAuthenticated(false);
-        setUsername("");
-        navigate("/SignIn");
+        const AccountApi = new accountApi(Cookies.get("token"));
+        // 取得帳戶資料
+        AccountApi.SignOut()
+            .then((res) => {
+                Cookies.remove("token");
+                Cookies.remove("username");
+                Cookies.remove("id");
+                setIsAuthenticated(false);
+                setUsername("");
+                onCartCountRefresh();
+                navigate("/signIn", { state: { from: "SignOut" } });
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("無法取得使用者資料，請重新登入");
+                Cookies.remove("token");
+            });
+
     };
 
     return (
@@ -58,15 +79,27 @@ export function Header({ cartCount, onCartCountRefresh }: HeaderProps) {
                     </Link>
 
                     {isAuthenticated ? (
-                        <div className="flex items-center space-x-4">
-                            <span className="text-orange-700">歡迎，{username}</span>
-                            <button
-                                onClick={handleLogout}
-                                className="px-4 py-1 rounded border border-orange-600 text-orange-700 hover:bg-orange-200 transition"
-                            >
-                                登出
-                            </button>
-                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <span className="text-orange-700 cursor-pointer hover:text-orange-900 transition">
+                                    歡迎，{username}
+                                </span>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-white shadow-lg rounded-xl mt-2">
+                                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                                    帳號
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate("/cart")}>
+                                    購物車
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate("/orders")}>
+                                    訂單
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                                    登出
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     ) : (
                         <>
                             <Link
@@ -83,6 +116,7 @@ export function Header({ cartCount, onCartCountRefresh }: HeaderProps) {
                             </Link>
                         </>
                     )}
+
                 </nav>
             </div>
         </header>

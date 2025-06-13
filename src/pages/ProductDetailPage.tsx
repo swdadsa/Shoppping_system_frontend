@@ -2,6 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ItemsApi from "../api/ItemsApi";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import Cookies from "js-cookie";
+import cartApi from "../api/CartApi";
+import SignInOrSignUp from "@/components/SignInOrSignUp";
 
 type ItemImage = {
     id: number;
@@ -25,7 +29,11 @@ type Item = {
     images: ItemImage[];
 };
 
-const ProductDetailPage = () => {
+type ProductsPageProps = {
+    onCartCountChange?: (count: number) => void;
+};
+
+const ProductDetailPage = ({ onCartCountChange }: ProductsPageProps) => {
     const baseUrl = import.meta.env.VITE_API_URL;
 
     const { id } = useParams();
@@ -33,6 +41,7 @@ const ProductDetailPage = () => {
     const [item, setItem] = useState<ItemDetail | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [others, setOthers] = useState<Item[]>([]);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -62,6 +71,35 @@ const ProductDetailPage = () => {
         // 延長cookie有效期
         ItemsApi.extendCookieExpireTime();
     }, [id]);
+
+    const handleAddToCart = (itemId: number, amount: number) => {
+        const token = Cookies.get("token");
+        const userId = Cookies.get("id");
+
+        if (!token || !userId) {
+            setDialogOpen(true);
+            return;
+        }
+
+        const CartApi = new cartApi(token);
+        CartApi.addToCart(Number(userId), itemId, amount)
+            .then(() => {
+                toast.success("成功加入購物車！", {
+                    description: "您可以到右上角查看您的購物車。",
+                });
+
+                // 取得最新購物車數量並傳給 Header
+                CartApi.getCartCount(Number(userId)).then((count: number) => {
+                    if (onCartCountChange) {
+                        onCartCountChange(count);
+                    }
+                });
+            })
+            .catch((err) => {
+                console.error("加入購物車失敗：", err);
+                alert("加入購物車失敗");
+            });
+    };
 
     const handleDecrease = () => {
         setQuantity((prev) => Math.max(1, prev - 1));
@@ -95,7 +133,7 @@ const ProductDetailPage = () => {
                         <Button variant="outline" onClick={handleIncrease} className="w-10 h-10 text-xl">+</Button>
                     </div>
 
-                    <Button className="bg-orange-600 hover:bg-orange-700 text-white w-full mt-6">
+                    <Button className="bg-orange-600 hover:bg-orange-700 text-white w-full mt-6" onClick={() => handleAddToCart(item.id, quantity)}>
                         加入購物車
                     </Button>
                 </div>
@@ -122,6 +160,9 @@ const ProductDetailPage = () => {
                     ))}
                 </div>
             </div>
+
+            {/* SignInOrSignUp */}
+            <SignInOrSignUp dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} />
         </div>
     );
 };
