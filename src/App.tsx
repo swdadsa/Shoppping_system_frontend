@@ -5,13 +5,15 @@ import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import SignInPage from "./pages/SignInPage";
-import { Header } from "./components/Header";
+import Header from "./components/Header";
 import { Footer } from "./components/Footer";
 import cartApi from "./api/CartApi";
 import CartPage from "./pages/CartPage";
 import SignUpPage from "./pages/SignUpPage";
-import { Toaster } from "@/components/ui/sonner"; // shadcn 自動生成在 components/ui/sonner.tsx
+import { Toaster } from "@/components/ui/sonner";
 import ProfilePage from "./pages/ProfilePage";
+import OrdersPage from "./pages/OrdersPage";
+
 
 function App() {
   const [cartCount, setCartCount] = useState(0);
@@ -48,6 +50,7 @@ function App() {
           <Route path="/signIn" element={<SignInPage />} />
           <Route path="/signUp" element={<SignUpPage />} />
           <Route path="/cart" element={<CartPage onCartCountChange={refreshCartCount} />} />
+          <Route path="/orders" element={<OrdersPage />} />
         </Routes>
         <Footer />
       </main>

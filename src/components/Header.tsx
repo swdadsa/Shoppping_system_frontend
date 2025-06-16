@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { ShoppingCart } from "lucide-react";
@@ -10,18 +10,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import accountApi from "@/api/AccountApi";
 import { toast } from "sonner";
-
+import TitleApi from "@/api/TitleApi";
 
 type HeaderProps = {
     cartCount: number;
     onCartCountRefresh: () => void;
 };
 
-export function Header({ cartCount, onCartCountRefresh }: HeaderProps) {
+type Category = {
+    id: number;
+    name: string;
+    SubTitles: { id: number; name: string }[];
+};
+
+function Header({ cartCount, onCartCountRefresh }: HeaderProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState("");
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const token = Cookies.get("token");
@@ -31,31 +40,53 @@ export function Header({ cartCount, onCartCountRefresh }: HeaderProps) {
             setUsername(storedUsername);
         }
 
-        // 每次頁面變動都嘗試刷新購物車
         if (token) {
             onCartCountRefresh();
         }
     }, [location]);
 
+    // 點擊外部關閉商品下拉選單
+    useEffect(() => {
+        // 獲取分類
+        TitleApi.getIndexWithMainTitle()
+            .then((res) => setCategories(res))
+            .catch((err) => console.error(err));
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
+                setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     const handleLogout = () => {
         const AccountApi = new accountApi(Cookies.get("token"));
-        // 取得帳戶資料
         AccountApi.SignOut()
             .then((res) => {
-                Cookies.remove("token");
-                Cookies.remove("username");
-                Cookies.remove("id");
-                setIsAuthenticated(false);
-                setUsername("");
-                onCartCountRefresh();
-                navigate("/signIn", { state: { from: "SignOut" } });
+                if (res.status === "success") {
+                    Cookies.remove("token");
+                    Cookies.remove("username");
+                    Cookies.remove("id");
+                    setIsAuthenticated(false);
+                    setUsername("");
+                    onCartCountRefresh();
+                    navigate("/signIn", { state: { from: "SignOut" } });
+                } else {
+                    toast.error("Api 錯誤，請重新登入");
+                    Cookies.remove("token");
+                    navigate("/signIn");
+                }
             })
             .catch((err) => {
                 console.error(err);
                 toast.error("無法取得使用者資料，請重新登入");
                 Cookies.remove("token");
             });
-
     };
 
     return (
@@ -64,11 +95,20 @@ export function Header({ cartCount, onCartCountRefresh }: HeaderProps) {
                 <Link to="/" className="text-2xl font-bold text-orange-700">
                     WarmShop
                 </Link>
-                <nav className="flex items-center space-x-6 text-orange-600 font-medium">
+                <nav className="flex items-center space-x-6 text-orange-600 font-medium relative">
                     <Link to="/" className="hover:text-orange-800 transition">首頁</Link>
-                    <Link to="/products" className="hover:text-orange-800 transition">商品</Link>
+                    {/* 商品 - 點擊觸發 */}
+                    <div>
+                        <span
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="cursor-pointer hover:text-orange-800"
+                        >
+                            商品
+                        </span>
+                    </div>
                     <Link to="/about" className="hover:text-orange-800 transition">關於我們</Link>
                     <Link to="/contact" className="hover:text-orange-800 transition">聯絡我們</Link>
+
                     <Link to="/cart" className="relative hover:text-orange-800 transition">
                         <ShoppingCart className="w-5 h-5" />
                         {cartCount > 0 && (
@@ -116,9 +156,36 @@ export function Header({ cartCount, onCartCountRefresh }: HeaderProps) {
                             </Link>
                         </>
                     )}
-
                 </nav>
             </div>
+
+            {/* 展開的商品分類清單 */}
+            {isDropdownOpen && (
+                <div className="bg-white border-t border-orange-200 shadow-inner">
+                    <div className="container mx-auto flex flex-wrap py-4 px-6">
+                        {categories.map((main) => (
+                            <div key={main.id} className="p-4 min-w-[200px] border-r border-orange-100">
+                                <div className="font-semibold text-orange-700 mb-2">{main.name}</div>
+                                <ul className="space-y-1">
+                                    {main.SubTitles.map((sub) => (
+                                        <li key={sub.id}>
+                                            <Link
+                                                to={`/products?sub_title_id=${sub.id}`}
+                                                className="text-orange-600 hover:text-orange-800"
+                                                onClick={() => setIsDropdownOpen(false)}
+                                            >
+                                                {sub.name}
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </header>
     );
 }
+
+export default Header;

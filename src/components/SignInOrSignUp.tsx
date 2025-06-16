@@ -22,7 +22,7 @@ const SignInOrSignUp = ({ dialogOpen, setDialogOpen }: Props) => {
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>請先登入或註冊</DialogTitle>
+                        <DialogTitle>請先登入</DialogTitle>
                     </DialogHeader>
                     <div className="text-orange-700 text-sm">
                         您必須登入才能將商品加入購物車。
@@ -31,7 +31,9 @@ const SignInOrSignUp = ({ dialogOpen, setDialogOpen }: Props) => {
                         <Button variant="outline" onClick={() => navigate("/signUp")}>
                             註冊
                         </Button>
-                        <Button onClick={() => navigate("/signIn")}>登入</Button>
+                        <Button onClick={() => navigate("/signIn")}>
+                            登入
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -23,9 +23,9 @@ class ItemsApi implements IExtendCookieExpireTime {
     }
 
     // 獲取商品清單
-    async getItems() {
+    async getItems(sub_title_id?: number) {
         try {
-            const res = await this.axiosInstance.get(`index`);
+            const res = await this.axiosInstance.get(`index?sub_title_id=${sub_title_id}`);
             return res.data.data;
         } catch (error) {
             console.error("取得商品清單錯誤", error);

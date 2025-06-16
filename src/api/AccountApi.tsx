@@ -69,6 +69,17 @@ class AccountApi implements IExtendCookieExpireTime {
         }
     }
 
+    // 修改密碼
+    async updatePassword(payload: {}) {
+        try {
+            const res = await this.axiosInstance.patch(`updatePassword`, payload);
+            return res.data;
+        } catch (error) {
+            console.error("修改密碼錯誤", error);
+            throw error;
+        }
+    }
+
 }
 
 export default AccountApi;

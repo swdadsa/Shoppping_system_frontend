@@ -6,6 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import accountApi from "@/api/AccountApi";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 
 type AccountData = {
     id: number;
@@ -15,9 +25,14 @@ type AccountData = {
     isVerified: "0" | "1";
 };
 
-export default function ProfilePage() {
+function ProfilePage() {
     const [user, setUser] = useState<AccountData | null>(null);
     const navigate = useNavigate();
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [oldPassword, setOldPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
 
     useEffect(() => {
         const token = Cookies.get("token");
@@ -69,7 +84,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <span className="font-semibold">權限等級：</span>
-                            {user.permissions === 1 ? "管理員" : "一般使用者"}
+                            {user.permissions === 0 ? "管理員" : "一般使用者"}
                         </div>
                     </div>
 
@@ -77,12 +92,88 @@ export default function ProfilePage() {
                         <Button variant="outline" onClick={() => navigate("/")}>
                             回首頁
                         </Button>
-                        <Button onClick={() => navigate("/change-password")}>
+                        <Button onClick={() => setDialogOpen(true)}>
                             更改密碼
                         </Button>
                     </div>
                 </CardContent>
             </Card>
+
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>修改密碼</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="oldPassword">舊密碼</Label>
+                            <Input
+                                id="oldPassword"
+                                type="password"
+                                value={oldPassword}
+                                onChange={(e) => setOldPassword(e.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="newPassword">新密碼</Label>
+                            <Input
+                                id="newPassword"
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter className="pt-4">
+                        <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                            取消
+                        </Button>
+                        <Button
+                            disabled={loading}
+                            onClick={async () => {
+                                if (!oldPassword || !newPassword) {
+                                    toast.error("請輸入舊密碼與新密碼");
+                                    return;
+                                }
+
+                                setLoading(true);
+
+                                try {
+                                    const token = Cookies.get("token");
+                                    const AccountApi = new accountApi(token!);
+
+                                    const res = await AccountApi.updatePassword({
+                                        oldPassword,
+                                        newPassword,
+                                    });
+
+                                    if (res.status === "success") {
+                                        toast.success("密碼修改成功，下次登入請使用新密碼!");
+                                        setDialogOpen(false);
+                                        setOldPassword("");
+                                        setNewPassword("");
+                                    } else {
+                                        toast.error(res.message || "密碼修改失敗");
+                                    }
+                                } catch (err) {
+                                    console.error(err);
+                                    toast.error("伺服器錯誤，請稍後再試");
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                        >
+                            {loading ? "儲存中..." : "送出"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
+
     );
 }
+
+export default ProfilePage;
