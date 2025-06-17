@@ -26,6 +26,13 @@ const HomePage = ({ onCartCountChange }: ProductsPageProps) => {
     const [items, setItems] = useState<Item[]>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const location = useLocation();
+    const staticCategories = [
+        { name: "服飾", sub_title_id: 14 },
+        { name: "居家", sub_title_id: 8 },
+        { name: "3C", sub_title_id: 1 },
+        { name: "美妝", sub_title_id: 19 },
+    ];
+
 
     // 顯示登入成功 toast
     useEffect(() => {
@@ -89,13 +96,13 @@ const HomePage = ({ onCartCountChange }: ProductsPageProps) => {
             <section className="container mx-auto px-4">
                 <h2 className="text-2xl font-semibold text-orange-700 mb-4">快速選單</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                    {['服飾', '居家', '3C', '美妝'].map((cat) => (
+                    {staticCategories.map((val) => (
                         <Link
-                            to={`/products?category=${cat}`}
-                            key={cat}
+                            to={`/products?sub_title_id=${val.sub_title_id}`}
+                            key={val.name}
                             className="bg-orange-50 p-6 rounded-xl shadow hover:bg-orange-100"
                         >
-                            {cat}
+                            {val.name}
                         </Link>
                     ))}
                 </div>

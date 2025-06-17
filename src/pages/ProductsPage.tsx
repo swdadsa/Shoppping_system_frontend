@@ -45,23 +45,29 @@ const ProductsPage = ({ onCartCountChange }: ProductsPageProps) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
     const [searchParams] = useSearchParams();
+    const [searchKeyword, setSearchKeyword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const subTitleId = searchParams.get("sub_title_id");
     const navigate = useNavigate();
 
     // 載入商品
     useEffect(() => {
+        setIsLoading(true);
         ItemsApi.getItems(Number(subTitleId))
             .then((res) => setItems(res))
-            .catch((err) => console.error("API 錯誤：", err));
+            .catch((err) => console.error("API 錯誤：", err))
+            .finally(() => setIsLoading(false));
 
         ItemsApi.extendCookieExpireTime();
     }, [subTitleId]);
 
     // 載入分類
     useEffect(() => {
+        setIsLoading(true);
         TitleApi.getIndexWithMainTitle()
             .then((res) => setCategories(res))
-            .catch((err) => console.error("分類API錯誤：", err));
+            .catch((err) => console.error("分類API錯誤：", err))
+            .finally(() => setIsLoading(false));
     }, []);
 
     const handleAddToCart = (itemId: number) => {
@@ -97,11 +103,32 @@ const ProductsPage = ({ onCartCountChange }: ProductsPageProps) => {
         navigate(`/products?sub_title_id=${id}`);
     };
 
+    // 搜尋觸發事件
+    const handleSearch = () => {
+        setIsLoading(true);
+        ItemsApi.getItems(Number(subTitleId), searchKeyword)
+            .then((res) => setItems(res))
+            .catch((err) => console.error("搜尋API錯誤：", err))
+            .finally(() => setIsLoading(false));
+    };
+
     return (
         <div className="flex px-4 py-8">
             {/* 左側漢堡清單 */}
             <aside className="w-64 pr-6 sticky top-20 self-start h-[calc(100vh-80px)] overflow-auto border-r border-orange-200">
                 <h2 className="text-xl font-bold mb-4 text-orange-700">商品分類</h2>
+
+                <ul className="mb-4">
+                    <li>
+                        <button
+                            className={`text-left w-full py-1 px-2 rounded hover:bg-orange-100 transition ${!subTitleId ? "bg-orange-200 font-bold" : ""
+                                }`}
+                            onClick={() => navigate("/products")}
+                        >
+                            所有商品
+                        </button>
+                    </li>
+                </ul>
 
                 {categories.map((category) => (
                     <div key={category.id} className="mb-6">
@@ -130,35 +157,55 @@ const ProductsPage = ({ onCartCountChange }: ProductsPageProps) => {
                     {subTitleId ? `分類商品` : `精選商品`}
                 </h1>
 
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="搜尋商品名稱"
+                        className="border border-orange-300 rounded px-3 py-2"
+                        value={searchKeyword}
+                        onChange={(e) => setSearchKeyword(e.target.value)}
+                    />
+                    <Button className="bg-orange-600 hover:bg-orange-700 text-white" onClick={handleSearch}>
+                        搜尋
+                    </Button>
+                </div>
+                <br />
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                    {items.map((item) => (
-                        <div
-                            key={item.id}
-                            className="transform transition-transform duration-200 hover:scale-105"
-                        >
-                            <div className="bg-orange-50 border border-orange-200 rounded-2xl shadow-sm hover:shadow-md transition p-4 h-full flex flex-col justify-between">
-                                <Link to={`/products/${item.id}`} className="block hover:opacity-90 transition">
-                                    <img
-                                        src={item.Item_images}
-                                        alt={item.name}
-                                        className="w-full h-48 object-cover rounded-lg mb-4"
-                                    />
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-orange-800 mb-1">{item.name}</h2>
-                                        <p className="text-orange-600 mb-2">NT$ {item.price}</p>
-                                        <p className="text-sm text-orange-500 mb-4">庫存：{item.storage}</p>
-                                    </div>
-                                </Link>
-
-                                <Button
-                                    onClick={() => handleAddToCart(item.id)}
-                                    className="bg-orange-600 hover:bg-orange-700 text-white w-full mt-auto"
-                                >
-                                    加入購物車
-                                </Button>
-                            </div>
+                    {isLoading ? (
+                        <div className="col-span-full text-center text-orange-600 text-lg animate-pulse">
+                            商品載入中...
                         </div>
-                    ))}
+                    ) : items.length > 0 ? (
+                        items.map((item) => (
+                            <div
+                                key={item.id}
+                                className="transform transition-transform duration-200 hover:scale-105"
+                            >
+                                <div className="bg-orange-50 border border-orange-200 rounded-2xl shadow-sm hover:shadow-md transition p-4 h-full flex flex-col justify-between">
+                                    <Link to={`/products/${item.id}`} className="block hover:opacity-90 transition">
+                                        <img
+                                            src={item.Item_images}
+                                            alt={item.name}
+                                            className="w-full h-48 object-cover rounded-lg mb-4"
+                                        />
+                                        <div>
+                                            <h2 className="text-lg font-semibold text-orange-800 mb-1">{item.name}</h2>
+                                            <p className="text-orange-600 mb-2">NT$ {item.price}</p>
+                                            <p className="text-sm text-orange-500 mb-4">庫存：{item.storage}</p>
+                                        </div>
+                                    </Link>
+
+                                    <Button
+                                        onClick={() => handleAddToCart(item.id)}
+                                        className="bg-orange-600 hover:bg-orange-700 text-white w-full mt-auto"
+                                    >
+                                        加入購物車
+                                    </Button>
+                                </div>
+                            </div>
+                        ))) : (
+                        <div className="col-span-full text-center text-gray-500">查無商品</div>
+                    )}
                 </div>
 
                 {/* SignInOrSignUp */}
