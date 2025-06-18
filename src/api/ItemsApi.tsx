@@ -1,6 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import type IExtendCookieExpireTime from "./IExtendCookieExpireTime";
+import dayjs from 'dayjs';
 
 class ItemsApi implements IExtendCookieExpireTime {
     private axiosInstance: any;
@@ -25,15 +26,14 @@ class ItemsApi implements IExtendCookieExpireTime {
     // 獲取商品清單
     async getItems(sub_title_id?: number, searchKeyword?: string) {
         try {
-            let searchURL = `index`
+            const date = dayjs().format('YYYY-MM-DD');
+
+            let searchURL = `index?date=${date}`
             if (sub_title_id) {
-                searchURL = `index?sub_title_id=${sub_title_id}`
+                searchURL += `&sub_title_id=${sub_title_id}`
             }
             if (searchKeyword) {
-                searchURL = `index?searchKeyword=${searchKeyword}`
-            }
-            if (sub_title_id && searchKeyword) {
-                searchURL = `index?sub_title_id=${sub_title_id}&searchKeyword=${searchKeyword}`
+                searchURL += `&searchKeyword=${searchKeyword}`
             }
 
             const res = await this.axiosInstance.get(searchURL);

@@ -13,6 +13,15 @@ type ItemImage = {
     order: number;
 };
 
+type Discount = {
+    id: number;
+    item_id: number;
+    startAt: string;
+    endAt: string;
+    discountPercent: string;
+};
+
+
 type ItemDetail = {
     id: number;
     name: string;
@@ -20,6 +29,7 @@ type ItemDetail = {
     storage: number;
     description: string;
     images: ItemImage[];
+    discounts: Discount[];
 };
 
 type Item = {
@@ -123,7 +133,16 @@ const ProductDetailPage = ({ onCartCountChange }: ProductsPageProps) => {
 
                 <div className="space-y-4">
                     <h1 className="text-3xl font-bold text-orange-800">{item.name}</h1>
-                    <p className="text-xl text-orange-600 font-semibold">NT$ {item.price}</p>
+                    {item.discounts && item.discounts.length > 0 ? (<>
+                        <p className="text-sm text-red-600 font-bold mb-1">🔥 打折中</p>
+                        <div className="flex items-center gap-2 mb-2">
+                            <p className="line-through text-gray-400">NT$ {item.price}</p>
+                            <p className="text-orange-600 font-semibold">
+                                NT$ {Math.floor(item.price * (1 - Number(item.discounts[0].discountPercent) / 100))}
+                            </p>
+                        </div>
+                    </>) : (<p className="text-xl text-orange-600 font-semibold">NT$ {item.price}</p>)}
+
                     <p className="text-orange-500">庫存：{item.storage}</p>
                     <p className="text-gray-700">{item.description}</p>
 

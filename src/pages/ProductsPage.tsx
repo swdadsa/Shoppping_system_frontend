@@ -14,6 +14,14 @@ type ItemImage = {
     path: string;
 };
 
+type Discount = {
+    id: number;
+    item_id: number;
+    startAt: string;
+    endAt: string;
+    discountPercent: number;
+};
+
 type Item = {
     id: number;
     sub_title_id: number;
@@ -21,6 +29,7 @@ type Item = {
     price: number;
     storage: number;
     images: ItemImage[];
+    discounts: Discount[];
     Item_images: string;
 };
 
@@ -190,7 +199,20 @@ const ProductsPage = ({ onCartCountChange }: ProductsPageProps) => {
                                         />
                                         <div>
                                             <h2 className="text-lg font-semibold text-orange-800 mb-1">{item.name}</h2>
-                                            <p className="text-orange-600 mb-2">NT$ {item.price}</p>
+                                            {item.discounts && item.discounts.length > 0 ? (
+                                                <>
+                                                    <p className="text-sm text-red-600 font-bold mb-1">🔥 打折中</p>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <p className="line-through text-gray-400">NT$ {item.price}</p>
+                                                        <p className="text-orange-600 font-semibold">
+                                                            NT$ {Math.floor(item.price * (Number(item.discounts[0].discountPercent) / 100))}
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <p className="text-orange-600 mb-2">NT$ {item.price}</p>
+                                            )}
+
                                             <p className="text-sm text-orange-500 mb-4">庫存：{item.storage}</p>
                                         </div>
                                     </Link>
