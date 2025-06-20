@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ItemsApi from "../api/ItemsApi";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import Cookies from "js-cookie";
 import cartApi from "../api/CartApi";
 import SignInOrSignUp from "@/components/SignInOrSignUp";
+import ProductCard from "@/components/ProductCard";
+import { getDiscountedPrice } from "@/utils/discountUtils";
 
 type ItemImage = {
     id: number;
@@ -18,7 +20,8 @@ type Discount = {
     item_id: number;
     startAt: string;
     endAt: string;
-    discountPercent: string;
+    discountNumber: number;
+    discountPercent: number;
 };
 
 
@@ -37,6 +40,7 @@ type Item = {
     name: string;
     price: number;
     images: ItemImage[];
+    discounts: Discount[];
 };
 
 type ProductsPageProps = {
@@ -46,8 +50,8 @@ type ProductsPageProps = {
 const ProductDetailPage = ({ onCartCountChange }: ProductsPageProps) => {
     const baseUrl = import.meta.env.VITE_API_URL;
 
-    const { id } = useParams();
     const navigate = useNavigate();
+    const { id } = useParams();
     const [item, setItem] = useState<ItemDetail | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [others, setOthers] = useState<Item[]>([]);
@@ -122,26 +126,37 @@ const ProductDetailPage = ({ onCartCountChange }: ProductsPageProps) => {
     if (!item) return <div className="p-8">載入中...</div>;
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-12">
+        <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
             {/* 商品內容 */}
-            <div className="grid md:grid-cols-2 gap-8">
-                <img
-                    src={` ${baseUrl}/${item.images[0]?.path}`}
-                    alt={item.name}
-                    className="w-full rounded-xl object-cover h-96"
-                />
-
-                <div className="space-y-4">
+            <div className="grid md:grid-cols-12 gap-8">
+                <div className="col-span-1">
+                    <Button variant="outline" onClick={() => navigate(-1)}>
+                        ← 返回
+                    </Button>
+                </div>
+                <div className="col-span-6">
+                    <img
+                        src={` ${baseUrl}/${item.images[0]?.path}`}
+                        alt={item.name}
+                        className="w-full rounded-xl object-cover h-96"
+                    />
+                </div>
+                <div className="col-span-5">
                     <h1 className="text-3xl font-bold text-orange-800">{item.name}</h1>
-                    {item.discounts && item.discounts.length > 0 ? (<>
-                        <p className="text-sm text-red-600 font-bold mb-1">🔥 打折中</p>
-                        <div className="flex items-center gap-2 mb-2">
-                            <p className="line-through text-gray-400">NT$ {item.price}</p>
-                            <p className="text-orange-600 font-semibold">
-                                NT$ {Math.floor(item.price * (1 - Number(item.discounts[0].discountPercent) / 100))}
-                            </p>
-                        </div>
-                    </>) : (<p className="text-xl text-orange-600 font-semibold">NT$ {item.price}</p>)}
+
+                    {item.discounts && item.discounts.length > 0 ? (
+                        <>
+                            <p className="text-sm text-red-600 font-bold mb-1">🔥 打折中</p>
+                            <div className="flex items-center gap-2 mb-2">
+                                <p className="line-through text-gray-400">NT$ {item.price}</p>
+                                <p className="text-orange-600 font-semibold">
+                                    NT$ {getDiscountedPrice(item.price, item.discounts[0].discountNumber, item.discounts[0].discountPercent)}
+                                </p>
+                            </div>
+                        </>
+                    ) : (
+                        <p className="text-xl text-orange-600 font-semibold">NT$ {item.price}</p>
+                    )}
 
                     <p className="text-orange-500">庫存：{item.storage}</p>
                     <p className="text-gray-700">{item.description}</p>
@@ -152,32 +167,36 @@ const ProductDetailPage = ({ onCartCountChange }: ProductsPageProps) => {
                         <Button variant="outline" onClick={handleIncrease} className="w-10 h-10 text-xl">+</Button>
                     </div>
 
-                    <Button className="bg-orange-600 hover:bg-orange-700 text-white w-full mt-6" onClick={() => handleAddToCart(item.id, quantity)}>
+                    <Button
+                        className="bg-orange-600 hover:bg-orange-700 text-white w-full mt-6"
+                        onClick={() => handleAddToCart(item.id, quantity)}
+                    >
                         加入購物車
                     </Button>
                 </div>
             </div>
 
+
             {/* 其他商品推薦 */}
-            <div className="mt-16">
-                <h2 className="text-2xl font-bold text-orange-700 mb-6">其他商品推薦</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    {others.map((other) => (
-                        <div
-                            key={other.id}
-                            onClick={() => navigate(`/products/${other.id}`)}
-                            className="cursor-pointer bg-orange-50 rounded-2xl border border-orange-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all p-4"
-                        >
-                            <img
-                                src={`${baseUrl}/${other.images[0]?.path}`}
-                                alt={other.name}
-                                className="w-full h-40 object-cover rounded-lg mb-3"
-                            />
-                            <h3 className="text-lg font-semibold text-orange-800">{other.name}</h3>
-                            <p className="text-orange-600">NT$ {other.price}</p>
-                        </div>
-                    ))}
+            <div className="grid md:grid-cols-12 gap-8">
+                <div className="col-span-2">
+                    <h2 className="text-2xl font-bold text-orange-700 mb-6 ">其他商品推薦</h2>
                 </div>
+                <div className="col-span-10">
+                </div>
+                {others.map((other) => (
+                    <div className="col-span-4 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        <ProductCard
+                            key={other.id}
+                            id={other.id}
+                            name={other.name}
+                            price={other.price}
+                            image={`${baseUrl}/${other.images[0]?.path}`}
+                            discounts={other.discounts}
+                            clickable={true}
+                        />
+                    </div>
+                ))}
             </div>
 
             {/* SignInOrSignUp */}

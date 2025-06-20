@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import ItemsApi from "../api/ItemsApi";
 import TitleApi from "../api/TitleApi";
 import cartApi from "../api/CartApi";
 import SignInOrSignUp from "@/components/SignInOrSignUp";
+import ProductCard from "@/components/ProductCard";
+
 
 type ItemImage = {
     id: number;
@@ -19,6 +21,7 @@ type Discount = {
     item_id: number;
     startAt: string;
     endAt: string;
+    discountNumber: number;
     discountPercent: number;
 };
 
@@ -186,46 +189,17 @@ const ProductsPage = ({ onCartCountChange }: ProductsPageProps) => {
                         </div>
                     ) : items.length > 0 ? (
                         items.map((item) => (
-                            <div
+                            <ProductCard
                                 key={item.id}
-                                className="transform transition-transform duration-200 hover:scale-105"
-                            >
-                                <div className="bg-orange-50 border border-orange-200 rounded-2xl shadow-sm hover:shadow-md transition p-4 h-full flex flex-col justify-between">
-                                    <Link to={`/products/${item.id}`} className="block hover:opacity-90 transition">
-                                        <img
-                                            src={item.Item_images}
-                                            alt={item.name}
-                                            className="w-full h-48 object-cover rounded-lg mb-4"
-                                        />
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-orange-800 mb-1">{item.name}</h2>
-                                            {item.discounts && item.discounts.length > 0 ? (
-                                                <>
-                                                    <p className="text-sm text-red-600 font-bold mb-1">🔥 打折中</p>
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <p className="line-through text-gray-400">NT$ {item.price}</p>
-                                                        <p className="text-orange-600 font-semibold">
-                                                            NT$ {Math.floor(item.price * (Number(item.discounts[0].discountPercent) / 100))}
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <p className="text-orange-600 mb-2">NT$ {item.price}</p>
-                                            )}
-
-                                            <p className="text-sm text-orange-500 mb-4">庫存：{item.storage}</p>
-                                        </div>
-                                    </Link>
-
-                                    <Button
-                                        onClick={() => handleAddToCart(item.id)}
-                                        className="bg-orange-600 hover:bg-orange-700 text-white w-full mt-auto"
-                                    >
-                                        加入購物車
-                                    </Button>
-                                </div>
-                            </div>
-                        ))) : (
+                                id={item.id}
+                                name={item.name}
+                                price={item.price}
+                                image={item.Item_images}
+                                discounts={item.discounts}
+                                onAddToCart={handleAddToCart}
+                            />
+                        ))
+                    ) : (
                         <div className="col-span-full text-center text-gray-500">查無商品</div>
                     )}
                 </div>

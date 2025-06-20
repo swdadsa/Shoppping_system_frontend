@@ -6,8 +6,16 @@ import ItemsApi from "../api/ItemsApi";
 import SignInOrSignUp from "@/components/SignInOrSignUp";
 import Cookies from "js-cookie";
 import cartApi from "../api/CartApi";
+import ProductCard from "@/components/ProductCard";
 
-
+type Discount = {
+    id: number;
+    item_id: number;
+    startAt: string;
+    endAt: string;
+    discountNumber: number;
+    discountPercent: number;
+}
 type Item = {
     id: number;
     sub_title_id: number;
@@ -16,6 +24,7 @@ type Item = {
     storage: number;
     images: { id: number; order: number; path: string }[];
     Item_images: string;
+    discounts: Discount[];
 };
 
 type ProductsPageProps = {
@@ -126,20 +135,15 @@ const HomePage = ({ onCartCountChange }: ProductsPageProps) => {
                 <h2 className="text-2xl font-semibold text-orange-700 mb-4">精選商品</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                     {items.map((item) => (
-                        <div key={item.id} className="bg-white rounded-xl shadow p-4">
-                            <Link to={`/products/${item.id}`}>
-                                <img
-                                    src={item.Item_images}
-                                    alt={item.name}
-                                    className="w-full h-32 object-cover rounded mb-2"
-                                />
-                                <h4 className="text-orange-700 font-medium">{item.name}</h4>
-                                <p className="text-orange-500">NT$ {item.price}</p>
-                            </Link>
-                            <Button className="w-full mt-2 bg-orange-500 text-white hover:bg-orange-600" onClick={() => handleAddToCart(item.id)}>
-                                加入購物車
-                            </Button>
-                        </div>
+                        <ProductCard
+                            key={item.id}
+                            id={item.id}
+                            name={item.name}
+                            price={item.price}
+                            image={item.Item_images}
+                            discounts={item.discounts}
+                            onAddToCart={handleAddToCart}
+                        />
                     ))}
                 </div>
             </section>
