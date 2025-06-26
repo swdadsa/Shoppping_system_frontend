@@ -31,10 +31,21 @@ class OrderApi implements IExtendCookieExpireTime {
             const res = await this.axiosInstance.get(`index?user_id=${user_id}`);
             return res.data;
         } catch (error) {
-            console.error("修改密碼錯誤", error);
+            console.error("api 錯誤", error);
             throw error;
         }
 
+    }
+
+    // 訂單詳細資料
+    async getOrderDetail(order_list_id: number) {
+        try {
+            const res = await this.axiosInstance.get(`indexDetail?order_list_id=${order_list_id}`);
+            return res.data;
+        } catch (error) {
+            console.error("api 錯誤", error);
+            throw error;
+        }
     }
 }
 
