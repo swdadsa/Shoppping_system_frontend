@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import orderApi from "@/api/OrderApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { getDiscountedPrice } from "@/utils/discountUtils";
 
 type Order = {
     id: number;
@@ -14,6 +15,13 @@ type Order = {
     condition: "0" | "1" | "2";
     total_price: string;
 };
+
+
+type OrderDetail = {
+    items: OrderDetailItem[];
+    totalPrice: string;
+};
+
 
 type OrderDetailItem = {
     id: number;
@@ -23,11 +31,12 @@ type OrderDetailItem = {
     price: number;
     name: string;
     Item_images: string;
+    discounts: Discounts;
 };
 
-type OrderDetail = {
-    items: OrderDetailItem[];
-    totalPrice: string;
+type Discounts = {
+    discountNumber: number;
+    discountPercent: number;
 };
 
 function OrdersPage() {
@@ -159,23 +168,39 @@ function OrdersPage() {
                                     </div>
 
                                     <div className="space-y-4 flex-1 overflow-auto pr-2">
-                                        {orderDetail.items.map((item) => (
-                                            <div
-                                                key={item.id}
-                                                className="flex gap-4 border border-orange-200 rounded-xl p-3 items-center bg-white shadow-sm"
-                                            >
-                                                <img
-                                                    src={item.Item_images}
-                                                    alt="商品圖片"
-                                                    className="w-20 h-20 object-cover rounded-lg"
-                                                />
-                                                <div className="space-y-1">
-                                                    <p className="text-orange-800 font-semibold">商品名稱：{item.name}</p>
-                                                    <p className="text-gray-700">單價：NT$ {item.price}</p>
-                                                    <p className="text-gray-700">數量：{item.amount}</p>
+                                        {orderDetail.items.map((item) => {
+                                            const discount = item.discounts;
+                                            let finalPrice = getDiscountedPrice(item.price, discount?.discountNumber, discount?.discountPercent);
+
+                                            return (
+                                                <div
+                                                    key={item.id}
+                                                    className="flex gap-4 border border-orange-200 rounded-xl p-3 items-center bg-white shadow-sm"
+                                                >
+                                                    <img
+                                                        src={item.Item_images}
+                                                        alt="商品圖片"
+                                                        className="w-20 h-20 object-cover rounded-lg"
+                                                    />
+                                                    <div className="space-y-1">
+                                                        <p className="text-orange-800 font-semibold">商品名稱：{item.name}</p>
+                                                        {discount?.discountNumber !== null || discount?.discountPercent !== null ? (
+                                                            <div className="space-y-0.5">
+                                                                <p className="text-gray-500 text-sm line-through">
+                                                                    原價：NT$ {item.price}
+                                                                </p>
+                                                                <p className="text-red-600 font-semibold">
+                                                                    折扣價：NT$ {finalPrice}
+                                                                </p>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-gray-800">單價：NT$ {item.price}</p>
+                                                        )}
+                                                        <p className="text-gray-700">數量：{item.amount}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
 
                                     <p className="text-right font-bold text-orange-700 mt-6">

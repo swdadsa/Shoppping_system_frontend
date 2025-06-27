@@ -1,5 +1,5 @@
 import axios from "axios";
-import type IExtendCookieExpireTime from "./IExtendCookieExpireTime";
+import type IExtendCookieExpireTime from "./Interface/IExtendCookieExpireTime";
 import Cookies from "js-cookie";
 
 class AccountApi implements IExtendCookieExpireTime {

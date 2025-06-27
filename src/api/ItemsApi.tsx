@@ -1,6 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
-import type IExtendCookieExpireTime from "./IExtendCookieExpireTime";
+import type IExtendCookieExpireTime from "./Interface/IExtendCookieExpireTime";
 import dayjs from 'dayjs';
 
 class ItemsApi implements IExtendCookieExpireTime {
