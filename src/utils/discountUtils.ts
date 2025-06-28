@@ -6,11 +6,13 @@ export function getDiscountedPrice(originalPrice: number, discountNumber: number
 
     if (discountNumber !== null) {
         finalPrice -= discountNumber;
+        console.log(`discountNumber : ${finalPrice}`)
         return finalPrice;
     }
 
     if (discountPercent !== null) {
         finalPrice = Math.floor(finalPrice * (1 - discountPercent / 100));
+        console.log(`discountPercent : ${finalPrice}`)
         return finalPrice;
     }
 

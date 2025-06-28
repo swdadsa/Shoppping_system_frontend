@@ -3,6 +3,15 @@ import cartApi from "@/api/CartApi";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus, Minus } from "lucide-react";
+import { getDiscountedPrice } from "@/utils/discountUtils";
+
+type Discount = {
+    id: number;
+    startAt: string;
+    endAt: string;
+    discountNumber: number;
+    discountPercent: number;
+};
 
 type CartItem = {
     id: number;
@@ -12,6 +21,7 @@ type CartItem = {
     storage: number;
     images: { path: string }[];
     amount: number;
+    discount: Discount[];
     path: string;
 };
 
@@ -131,7 +141,17 @@ const CartPage = ({ onCartCountChange }: ProductsPageProps) => {
                                 />
                                 <div className="flex-1">
                                     <h2 className="font-semibold text-orange-800 text-lg">{item.name}</h2>
-                                    <p className="text-orange-600">單價：NT$ {item.price}</p>
+                                    {
+                                        item.discount && item.discount.length > 0 ? (
+                                            <div className="space-y-1">
+                                                <p className="text-sm text-gray-500 line-through">原價：NT$ {item.price}</p>
+                                                <p className="text-red-600 font-semibold text-base">特價：NT$ {getDiscountedPrice(item.price, item.discount[0].discountNumber, item.discount[0].discountPercent)}</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-orange-600">單價：NT$ {item.price}</p>
+                                        )
+                                    }
+
                                     <div className="flex items-center gap-2 mt-2">
                                         <Button
                                             size="icon"

@@ -31,7 +31,7 @@ type OrderDetailItem = {
     price: number;
     name: string;
     Item_images: string;
-    discounts: Discounts;
+    discount: Discounts[];
 };
 
 type Discounts = {
@@ -169,8 +169,7 @@ function OrdersPage() {
 
                                     <div className="space-y-4 flex-1 overflow-auto pr-2">
                                         {orderDetail.items.map((item) => {
-                                            const discount = item.discounts;
-                                            let finalPrice = getDiscountedPrice(item.price, discount?.discountNumber, discount?.discountPercent);
+                                            const discount = item.discount;
 
                                             return (
                                                 <div
@@ -184,13 +183,13 @@ function OrdersPage() {
                                                     />
                                                     <div className="space-y-1">
                                                         <p className="text-orange-800 font-semibold">商品名稱：{item.name}</p>
-                                                        {discount?.discountNumber !== null || discount?.discountPercent !== null ? (
+                                                        {discount && discount.length > 0 ? (
                                                             <div className="space-y-0.5">
                                                                 <p className="text-gray-500 text-sm line-through">
                                                                     原價：NT$ {item.price}
                                                                 </p>
                                                                 <p className="text-red-600 font-semibold">
-                                                                    折扣價：NT$ {finalPrice}
+                                                                    特價：NT$ {getDiscountedPrice(item.price, discount[0].discountNumber, discount[0].discountPercent)}
                                                                 </p>
                                                             </div>
                                                         ) : (
