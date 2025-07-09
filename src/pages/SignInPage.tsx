@@ -52,9 +52,11 @@ const SignInPage = () => {
 
                 navigate("/", { state: { from: "login" } });
             } else {
+                toast.error(res.data);
             }
         } catch (err) {
             console.error("API 錯誤：", err);
+            toast.error("帳號或密碼錯誤");
         }
     };
 
