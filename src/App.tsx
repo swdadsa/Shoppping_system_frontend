@@ -13,6 +13,8 @@ import SignUpPage from "./pages/SignUpPage";
 import { Toaster } from "@/components/ui/sonner";
 import ProfilePage from "./pages/ProfilePage";
 import OrdersPage from "./pages/OrdersPage";
+import PaymentPage from "./pages/PaymentPage";
+import PaymentResultPage from "./pages/PaymentResultPage";
 
 
 function App() {
@@ -51,6 +53,8 @@ function App() {
           <Route path="/signUp" element={<SignUpPage />} />
           <Route path="/cart" element={<CartPage onCartCountChange={refreshCartCount} />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/payment/result" element={<PaymentResultPage />} />
         </Routes>
         <Footer />
       </main>

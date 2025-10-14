@@ -4,6 +4,7 @@ import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { getDiscountedPrice } from "@/utils/discountUtils";
+import { useNavigate } from "react-router-dom";
 
 type Discount = {
     id: number;
@@ -33,6 +34,7 @@ const CartPage = ({ onCartCountChange }: ProductsPageProps) => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [updatingItems, setUpdatingItems] = useState<{ [key: number]: boolean }>({});
     const [total, setTotal] = useState(0);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const token = Cookies.get("token");
@@ -115,6 +117,28 @@ const CartPage = ({ onCartCountChange }: ProductsPageProps) => {
         }
     };
 
+    // handelcheckout 傳送資料智付款介面
+    const handleCheckout = () => {
+        const token = Cookies.get("token");
+        const userId = Cookies.get("id");
+
+        if (!token || !userId) {
+            navigate("/signIn");
+            return;
+        }
+        const payload = {
+            user_id: Number(userId),
+            total_price: total,
+            item: cartItems.map((item) => ({
+                id: item.id,
+                amount: item.amount,
+            })),
+        };
+
+        localStorage.setItem("checkoutData", JSON.stringify(payload));
+        navigate("/payment")
+    };
+
 
     useEffect(() => {
         updateTotal(cartItems);
@@ -190,7 +214,8 @@ const CartPage = ({ onCartCountChange }: ProductsPageProps) => {
                         <div className="text-xl font-bold text-orange-700">
                             總金額：NT$ {total}
                         </div>
-                        <Button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg">
+                        <Button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg"
+                            onClick={() => handleCheckout()}>
                             前往結帳
                         </Button>
                     </div>
