@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import cartApi from "@/api/CartApi";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { getDiscountedPrice } from "@/utils/discountUtils";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 type Discount = {
     id: number;
@@ -34,6 +35,15 @@ const CartPage = ({ onCartCountChange }: ProductsPageProps) => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [updatingItems, setUpdatingItems] = useState<{ [key: number]: boolean }>({});
     const [total, setTotal] = useState(0);
+    const paymentMethods = useMemo(
+        () => [
+            { id: "linepay", label: "LINE Pay", description: "使用 LINE Pay 快速結帳" },
+            { id: "credit_card", label: "信用卡", description: "支援 VISA / MasterCard" },
+            { id: "bank_transfer", label: "銀行轉帳", description: "下單後 3 日內轉帳完成" },
+        ],
+        []
+    );
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(paymentMethods[0]?.id ?? "");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -119,6 +129,11 @@ const CartPage = ({ onCartCountChange }: ProductsPageProps) => {
 
     // handelcheckout 傳送資料智付款介面
     const handleCheckout = () => {
+        if (!selectedPaymentMethod) {
+            toast.error("請選擇付款方式");
+            return;
+        }
+
         const token = Cookies.get("token");
         const userId = Cookies.get("id");
 
@@ -133,6 +148,7 @@ const CartPage = ({ onCartCountChange }: ProductsPageProps) => {
                 id: item.id,
                 amount: item.amount,
             })),
+            payment_method: selectedPaymentMethod,
         };
 
         localStorage.setItem("checkoutData", JSON.stringify(payload));
@@ -210,14 +226,40 @@ const CartPage = ({ onCartCountChange }: ProductsPageProps) => {
                         ))}
                     </div>
 
-                    <div className="flex justify-between items-center mt-8 border-t pt-6">
-                        <div className="text-xl font-bold text-orange-700">
-                            總金額：NT$ {total}
+                    <div className="mt-8 border-t pt-6 space-y-6">
+                        <div>
+                            <h2 className="text-lg font-semibold text-orange-700 mb-3">付款方式</h2>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                {paymentMethods.map((method) => {
+                                    const isActive = selectedPaymentMethod === method.id;
+                                    return (
+                                        <Button
+                                            key={method.id}
+                                            type="button"
+                                            variant={isActive ? "default" : "outline"}
+                                            className={`flex-1 border-orange-300 ${isActive ? "bg-orange-600 hover:bg-orange-700 text-white" : "text-orange-700"}`}
+                                            onClick={() => setSelectedPaymentMethod(method.id)}
+                                        >
+                                            <span className="flex flex-col">
+                                                <span className="font-semibold">{method.label}</span>
+                                                <span className="text-xs opacity-80">{method.description}</span>
+                                            </span>
+                                        </Button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <Button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg"
-                            onClick={() => handleCheckout()}>
-                            前往結帳
-                        </Button>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-xl font-bold text-orange-700">
+                                總金額 NT$ {total}
+                            </div>
+                            <Button
+                                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg"
+                                onClick={() => handleCheckout()}
+                            >
+                                前往結帳
+                            </Button>
+                        </div>
                     </div>
                 </>
             )}
