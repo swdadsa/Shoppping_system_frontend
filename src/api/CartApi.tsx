@@ -108,7 +108,8 @@ class CartApi implements IExtendCookieExpireTime {
     // 創建訂單
     async createOrder(user_id: number, data: any) {
         try {
-            const res = await this.axiosInstance.post(`submit`, data); //創建訂單
+            const payload = { ...data, user_id };
+            const res = await this.axiosInstance.post(`submit`, payload); //創建訂單
             return res.data.data;
         } catch (error) {
             console.error("創建訂單錯誤", error);
