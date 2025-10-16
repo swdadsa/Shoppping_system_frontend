@@ -49,7 +49,7 @@ type Category = {
 };
 
 type ProductsPageProps = {
-    onCartCountChange?: (count: number) => void;
+    onCartCountChange?: (count?: number) => void;
 };
 
 const ProductsPage = ({ onCartCountChange }: ProductsPageProps) => {
@@ -98,11 +98,9 @@ const ProductsPage = ({ onCartCountChange }: ProductsPageProps) => {
                     description: "您可以到右上角查看您的購物車。",
                 });
 
-                CartApi.getCartCount(Number(userId)).then((count: number) => {
-                    if (onCartCountChange) {
-                        onCartCountChange(count);
-                    }
-                });
+                if (onCartCountChange) {
+                    onCartCountChange();
+                }
             })
             .catch((err) => {
                 console.error("加入購物車失敗：", err);
